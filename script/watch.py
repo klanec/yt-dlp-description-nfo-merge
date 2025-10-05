@@ -39,12 +39,11 @@ class DescriptionToNFOHandler(FileSystemEventHandler):
                 print(f"Merged description into {nfo_file} and deleted {description_file}.")
 
 if __name__ == "__main__":
-    path = "."  # Change this to your target directory
     event_handler = DescriptionToNFOHandler()
     observer = Observer()
-    observer.schedule(event_handler, path, recursive=False)
+    observer.schedule(event_handler, WATCH_DIR, recursive=False)
     observer.start()
-    print(f"Watching directory: {path}")
+    print(f"Watching directory: {WATCH_DIR}")
     try:
         while True:
             time.sleep(1)
