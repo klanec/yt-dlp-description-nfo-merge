@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -14,7 +15,7 @@ class DescriptionToNFOHandler(FileSystemEventHandler):
             nfo_file = f"{basename}.nfo"
 
             if os.path.exists(description_file) and os.path.exists(nfo_file):
-                print(f"Found matching files: {description_file} and {nfo_file}. Waiting 10 seconds...")
+                print(f"Found matching files: {description_file} and {nfo_file}. Waiting 10 seconds...", file=sys.stderr)
                 time.sleep(1)  # Wait for files to finish writing
 
                 # Read description
@@ -36,14 +37,14 @@ class DescriptionToNFOHandler(FileSystemEventHandler):
 
                 # Delete description file
                 os.remove(description_file)
-                print(f"Merged description into {nfo_file} and deleted {description_file}.")
+                print(f"Merged description into {nfo_file} and deleted {description_file}.", file=sys.stderr)
 
 if __name__ == "__main__":
     event_handler = DescriptionToNFOHandler()
     observer = Observer()
     observer.schedule(event_handler, WATCH_DIR, recursive=False)
     observer.start()
-    print(f"Watching directory: {WATCH_DIR}")
+    print(f"Watching directory: {WATCH_DIR}", file=sys.stderr)
     try:
         while True:
             time.sleep(1)
