@@ -15,29 +15,33 @@ class DescriptionToNFOHandler(FileSystemEventHandler):
             nfo_file = f"{basename}.nfo"
 
             if os.path.exists(description_file) and os.path.exists(nfo_file):
-                print(f"Found matching files: {description_file} and {nfo_file}. Waiting 10 seconds...", file=sys.stderr)
-                time.sleep(1)  # Wait for files to finish writing
+                try:
+                    print(f"Found matching files: {description_file} and {nfo_file}", file=sys.stderr)
+                    time.sleep(5) 
 
-                # Read description
-                with open(description_file, 'r', encoding='utf-8') as f:
-                    description = f.read().strip().replace('\n', '  \n')
+                    # Read description
+                    with open(description_file, 'r', encoding='utf-8') as f:
+                        description = f.read().strip().replace('\n', '  \n')
 
-                # Read and parse NFO
-                tree = ET.parse(nfo_file)
-                root = tree.getroot()
+                    # Read and parse NFO
+                    tree = ET.parse(nfo_file)
+                    root = tree.getroot()
 
-                # Find or create the <plot> field (common in Kodi/Jellyfin NFO)
-                plot = root.find('plot')
-                if plot is None:
-                    plot = ET.SubElement(root, 'plot')
-                plot.text = description
+                    # Find or create the <plot> field (common in Kodi/Jellyfin NFO)
+                    plot = root.find('plot')
+                    if plot is None:
+                        plot = ET.SubElement(root, 'plot')
+                    plot.text = description
 
-                # Overwrite NFO
-                tree.write(nfo_file, encoding='utf-8', xml_declaration=True)
+                    # Overwrite NFO
+                    tree.write(nfo_file, encoding='utf-8', xml_declaration=True)
 
-                # Delete description file
-                os.remove(description_file)
-                print(f"Merged description into {nfo_file} and deleted {description_file}.", file=sys.stderr)
+                    # Delete description file
+                    os.remove(description_file)
+                    print(f"Merged description into {nfo_file} and deleted {description_file}.", file=sys.stderr)
+                except Exception as e:
+                    print(e, file=sys.stderr)
+
 
 if __name__ == "__main__":
     event_handler = DescriptionToNFOHandler()
