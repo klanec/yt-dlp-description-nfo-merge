@@ -1,0 +1,53 @@
+import os
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import xml.etree.ElementTree as ET
+
+WATCH_DIR = os.environ.get('WATCH_DIR', '/app/media')
+
+class DescriptionToNFOHandler(FileSystemEventHandler):
+    def on_created(self, event):
+        if not event.is_directory:
+            basename = os.path.splitext(event.src_path)[0]
+            description_file = f"{basename}.description"
+            nfo_file = f"{basename}.nfo"
+
+            if os.path.exists(description_file) and os.path.exists(nfo_file):
+                print(f"Found matching files: {description_file} and {nfo_file}. Waiting 10 seconds...")
+                time.sleep(1)  # Wait for files to finish writing
+
+                # Read description
+                with open(description_file, 'r', encoding='utf-8') as f:
+                    description = f.read().strip().replace('\n', '  \n')
+
+                # Read and parse NFO
+                tree = ET.parse(nfo_file)
+                root = tree.getroot()
+
+                # Find or create the <plot> field (common in Kodi/Jellyfin NFO)
+                plot = root.find('plot')
+                if plot is None:
+                    plot = ET.SubElement(root, 'plot')
+                plot.text = description
+
+                # Overwrite NFO
+                tree.write(nfo_file, encoding='utf-8', xml_declaration=True)
+
+                # Delete description file
+                os.remove(description_file)
+                print(f"Merged description into {nfo_file} and deleted {description_file}.")
+
+if __name__ == "__main__":
+    path = "."  # Change this to your target directory
+    event_handler = DescriptionToNFOHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path, recursive=False)
+    observer.start()
+    print(f"Watching directory: {path}")
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
